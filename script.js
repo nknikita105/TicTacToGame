@@ -1,72 +1,63 @@
-let playerText = document.getElementById('playerText')
-let restartBtn = document.getElementById('restartBtn')
-let boxes = Array.from(document.getElementsByClassName('box'))
+let currentPlayer = "X";
+let gameBoard = ["", "", "", "", "", "", "", "", ""];
+let gameOver = false;
+let difficulty = "easy";
 
-let winnerIndicator = getComputedStyle(document.body).getPropertyValue('--winning-blocks')
+const boxes = document.querySelectorAll(".box");
+const playerText = document.getElementById("playerText");
+const restartBtn = document.getElementById("restartBtn");
+const easyBtn = document.getElementById("easyBtn");
+const mediumBtn = document.getElementById("mediumBtn");
+const hardBtn = document.getElementById("hardBtn");
 
-const O_TEXT = "O"
-const X_TEXT = "X"
-let currentPlayer = X_TEXT
-let spaces = Array(9).fill(null)
+const winningConditions = [
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
+  [0, 4, 8],
+  [2, 4, 6],
+];
 
-const startGame = () => {
-    boxes.forEach(box => box.addEventListener('click', boxClicked))
-}
-
-function boxClicked(e) {
-    const id = e.target.id
-
-    if(!spaces[id]){
-        spaces[id] = currentPlayer
-        e.target.innerText = currentPlayer
-
-        if(playerHasWon() !==false){
-            playerText.innerHTML = `${currentPlayer} has won!`
-            let winning_blocks = playerHasWon()
-
-            winning_blocks.map( box => boxes[box].style.backgroundColor=winnerIndicator)
-            return
-        }
-
-        currentPlayer = currentPlayer == X_TEXT ? O_TEXT : X_TEXT
+function handleBoxClick(event) {
+  const boxId = parseInt(event.target.id);
+  if (!gameOver && gameBoard[boxId] === "") {
+    gameBoard[boxId] = currentPlayer;
+    event.target.innerText = currentPlayer;
+    checkWinner();
+    if (!gameOver && currentPlayer === "O") {
+      makeComputerMove();
     }
+    currentPlayer = currentPlayer === "X" ? "O" : "X";
+    playerText.innerText = `Player ${currentPlayer}'s Turn`;
+  }
 }
 
-const winningCombos = [
-    [0,1,2],
-    [3,4,5],
-    [6,7,8],
-    [0,3,6],
-    [1,4,7],
-    [2,5,8],
-    [0,4,8],
-    [2,4,6]
-]
-
-function playerHasWon() {
-    for (const condition of winningCombos) {
-        let [a, b, c] = condition
-
-        if(spaces[a] && (spaces[a] == spaces[b] && spaces[a] == spaces[c])) {
-            return [a,b,c]
-        }
+function checkWinner() {
+  for (let i = 0; i < winningConditions.length; i++) {
+    const condition = winningConditions[i];
+    const a = gameBoard[condition[0]];
+    const b = gameBoard[condition[1]];
+    const c = gameBoard[condition[2]];
+    if (a === b && b === c && a !== "") {
+      gameOver = true;
+      playerText.innerText = `Player ${a} Wins!`;
+      return;
     }
-    return false
+  }
+
+  const tie = gameBoard.every((box) => box !== "");
+  if (tie) {
+    gameOver = true;
+    playerText.innerText = "It's a Tie!";
+  }
 }
 
-restartBtn.addEventListener('click', restart)
-
-function restart() {
-    spaces.fill(null)
-
-    boxes.forEach( box => {
-        box.innerText = ''
-        box.style.backgroundColor=''
-    })
-
-    playerText.innerHTML = 'Tic Tac Toe'
-
-    currentPlayer = X_TEXT
+function restartGame() {
+  gameBoard = ["", "", "", "", "", "", "", "", ""];
+  gameOver = false;
+  currentPlayer = "X";
+  boxes.forEach((box) => (box.innerText = ""));
 }
-
-startGame()
